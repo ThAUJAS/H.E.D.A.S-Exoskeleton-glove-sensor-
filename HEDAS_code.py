@@ -3,7 +3,6 @@
 # tkinter and ttk module
 from tkinter import * 
 from tkinter import messagebox
-from tkinter.ttk import *
 from numpy.lib.function_base import angle
 import serial
 import serial.tools.list_ports
@@ -16,7 +15,8 @@ import socket
 import json
 from general_functions import *
 import sys
-
+import pathlib
+import os
 # creates a Tk() object
 master = Tk()
 
@@ -38,16 +38,17 @@ val = 0
 #----------------------------function/thread for the interface--------------------------#
 def interface():
     global master
-    master.title("E.D.A.S")
+    master.title("H.E.D.A.S (Hand Exoskeleton Data Acquisition System)")
     master.state('zoomed')
+    master.config(bg = 'medium aquamarine')
     ports = serial.tools.list_ports.comports(include_links=False)
     if (len(ports) != 0): # on a trouvé au moins un port actif
-        label = Label(master, text ="Choose the port to which the device is connected:", font=("Courier", 20)).pack(pady = 10)
+        label = Label(master, text ="Choose the port to which the device is connected:", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
         for port in ports :  # affichage du nom de chaque port
-            Button(master, text = port.device, command = lambda : Calibration(port.device)).pack(pady = 10)
+            Button(master, text = port.device, command = lambda : Calibration(port.device), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack()
     else:  
-        label = Label(master, text = "No port found.").pack(pady = 10)
-        label = Label(master, text = "Connect a device and relaunch the interface.").pack(pady = 10)
+        label = Label(master, text = "No port found.", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 10)
+        label = Label(master, text = "Connect a device and relaunch the interface.", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 10)
         
 def Calibration(portDevice):
     global master
@@ -59,12 +60,12 @@ def Calibration(portDevice):
     try:
         with open("c:/TRAVAIL/MSc project/code python/sample.json") as json_open:
             data = json.load(json_open)
-        Label(master, text ="Do you want to calibrate or use a previous calibration profile?", font=("Courier", 20)).pack()
-        Button(master, text = "New calibration", command = Cal).pack(pady = 10)
-        Button(master, text = "Use a user calibration profile", command = NoCal).pack(pady = 10)
+        Label(master, text ="Do you want to calibrate or use a previous calibration profile?", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
+        Button(master, text = "New calibration", command = Cal, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
+        Button(master, text = "Use a user calibration profile", command = NoCal, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 50)
     except:
-        Label(master, text ="You didn't calibrate yet... Create a new calibration", font=("Courier", 20)).pack()
-        Button(master, text = "New calibration", command = Cal).pack(pady = 10)
+        Label(master, text ="You didn't calibrate yet... Create a new calibration", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        Button(master, text = "New calibration", command = Cal, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
 
 
 def Cal():
@@ -73,24 +74,36 @@ def Cal():
     eraseWidget()
 
     if val == 0:
-        Label(master, text ="Put your finger at 0° and close to each other", font=("Courier", 20)).pack()
-        image1 = Image.open("c:/TRAVAIL/MSc project/code python/main.jpg")
-        image1 = image1.resize((300, 475), Image.ANTIALIAS)
+        Label(master, text ="Put your finger at 0° and close to each other", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        image1 = Image.open(os.path.join(path + os.sep, "0 above.jpg"))
+        image1 = image1.resize((800, 600), Image.ANTIALIAS)
         test = ImageTk.PhotoImage(image1)
-        label1 = Label(image=test)
+        label1 = Label(image=test, bg = 'medium aquamarine')
         label1.image = test
-        label1.place(x=master.winfo_screenwidth()/2-300/2, y=master.winfo_screenheight()/2-475/2)
+        label1.pack(side = TOP, pady = 25)
     if val == 1:
-        Label(master, text ="Put your finger at 45°", font=("Courier", 20)).pack()
+        Label(master, text ="Put your finger at 45°", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        image1 = Image.open(os.path.join(path + os.sep, "45 profile.jpg"))
+        image1 = image1.resize((720, 540), Image.ANTIALIAS)
+        test1 = ImageTk.PhotoImage(image1)
+        label1 = Label(image=test1, bg = 'medium aquamarine')
+        label1.image = test1
+        image2 = Image.open(os.path.join(path + os.sep, "45 bellow.jpg"))
+        image2 = image2.resize((720, 540), Image.ANTIALIAS)
+        test2 = ImageTk.PhotoImage(image2)
+        label2 = Label(image=test2, bg = 'medium aquamarine')
+        label2.image = test2
+        label1.place(x=400,y = master.winfo_height()/2,anchor = CENTER)
+        label2.place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
     if val == 2:
-        Label(master, text ="Put your finger at 90°", font=("Courier", 20)).pack()
+        Label(master, text ="Put your finger at 90°", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
     if val == 3:
-        Label(master, text="UserName", font=("Courier", 20)).pack()
-        entry1 = Entry(master, font=("Courier", 20))
+        Label(master, text="Enter your Username", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        entry1 = Entry(master, font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine')
         entry1.pack()
-        Button(master, text = "Submit!", command = lambda : getName(entry1.get())).pack()
+        Button(master, text = "Submit!", command = lambda : getName(entry1.get()), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack()
     if val<3:
-        Button(master, text = "Done!", command = lambda : get_calibration(val)).place(x=725, y=700)
+        but = Button(master, text = "Done!", command = lambda : get_calibration(val), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=725, y=700)
 
 def get_calibration(num):
     global angles_raw, val, coeff_MCP,coeff_PIP
@@ -110,7 +123,7 @@ def get_calibration(num):
 
 def getName(name):
     try:
-        with open("c:/TRAVAIL/MSc project/code python/sample.json") as json_open:
+        with open(path, "sample.json") as json_open:
             data = json.load(json_open)
 
         data['Usernames'].append({'name': name,'PIP': coeff_MCP,'MPCx': coeff_MCP,'MPCz': z_MCP})
@@ -128,11 +141,11 @@ def getName(name):
 
 def NoCal():
     eraseWidget()
-    Label(master, text ="Choose your calibration profile", font=("Courier", 20)).pack()
+    Label(master, text ="Choose your calibration profile", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 100)
     with open("c:/TRAVAIL/MSc project/code python/sample.json") as json_open:
         data = json.load(json_open)
     for user in data['Usernames'] :  # button of the name of the user
-        Button(master, text = user['name'], command = lambda : get_coeff(user['PIP'],user['MPCx'],user['MPCz'])).pack(pady = 10)
+        Button(master, text = user['name'], command = lambda : get_coeff(user['PIP'],user['MPCx'],user['MPCz']), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
 
 # function that replace the coefficient from the JSON
 def get_coeff(PIP, MPCx, MPCz):
@@ -144,8 +157,8 @@ def get_coeff(PIP, MPCx, MPCz):
 
 def final_page():
     eraseWidget()
-    Label(master, text ="You are ready to use the glove", font=("Courier", 20)).pack()
-    Label(master, text ="The angles are avaibles in the array 'angles'", font=("Courier", 20)).pack()
+    Label(master, text ="You are ready to use the glove", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+    Label(master, text ="The angles are avaibles in the array 'angles'", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
 
 def Unity():
     eraseWidget()
@@ -224,6 +237,7 @@ def eraseWidget():
 if __name__ == "__main__":
     thread2 = Thread(target = interface)
     thread = thread_with_trace(target = func)
+    path = os.path.dirname(os.path.abspath(__file__))
     thread2.start()
     thread.start()
     master.protocol("WM_DELETE_WINDOW", on_closing)
