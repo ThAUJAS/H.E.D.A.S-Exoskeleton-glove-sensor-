@@ -95,35 +95,6 @@ void loop(){
   
   //-Printing on the serial monitor for Python to receive the data-//
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   for(int i = 0; i < sizeAngle-1; i++)
   {
     Serial.print(angles[i]);Serial.print(" ");

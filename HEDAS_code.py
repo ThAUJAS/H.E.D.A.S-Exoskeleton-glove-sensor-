@@ -1,6 +1,3 @@
-# This will import all the widgets
-# and modules which are available in
-# tkinter and ttk module
 from tkinter import * 
 from tkinter import messagebox
 from numpy.lib.function_base import angle
@@ -17,56 +14,63 @@ from general_functions import *
 import sys
 import pathlib
 import os
+
 # creates a Tk() object
 master = Tk()
 
+#global variables
 ready = False
 arduino = ""
 angles_raw = [0]*20
 angles = [0]*24
+Unity = False
+done = True
+val = 0
+
+# Variables for calibration
 angle_calibration = [0,45,90]
 angle_calibration_thumb = [0,45,80]
-Unity = False
-# Variables for calibration
 x_MCP = [[0] * 3 for i1 in range(5)]
 x_PIP = [[0] * 3 for i1 in range(5)]
 z_MCP = [0]*7
 coeff_MCP = [[0] * 3 for i1 in range(5)]
 coeff_PIP = [[0] * 3 for i1 in range(5)]
-done = True
-val = 0
 
 #----------------------------function/thread for the interface--------------------------#
+# 1) Main page: asking for the Port to which the Arduino is connected
 def interface():
     global master
     master.title("H.E.D.A.S (Hand Exoskeleton Data Acquisition System)")
     master.state('zoomed')
     master.config(bg = 'medium aquamarine')
-    ports = serial.tools.list_ports.comports(include_links=False)
-    if (len(ports) != 0): # on a trouvé au moins un port actif
+
+    ports = serial.tools.list_ports.comports(include_links=False) #looking for the acive ports
+
+    if (len(ports) != 0): # we found a port
         label = Label(master, text ="Choose the port to which the device is connected:", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
-        for port in ports :  # affichage du nom de chaque port
+        for port in ports :  # we display the ports' name on buttons
             Button(master, text = port.device, command = lambda : Calibration(port.device), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack()
-    else:  
-        label = Label(master, text = "No port found.", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 10)
-        label = Label(master, text = "Connect a device and relaunch the interface.", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 10)
-        
+    else:  # else we need to connect the device and relaunch the program
+        label = Label(master, text = "No port found. Connect a device and relaunch the program", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 300)
+
+# 2) Page where there is a choice between calibrating and using a previous calibration      
 def Calibration(portDevice):
     global master
     global ready
     global arduino
-    arduino = serial.Serial(port=portDevice, baudrate=115200, timeout=.1)
-    ready = True
+    arduino = serial.Serial(port=portDevice, baudrate=115200, timeout=.1) # the arduino is connected to Python
+    ready = True # the read_function can start reading the Arduino data
     eraseWidget()
     if os.path.isfile(os.path.join(path + os.sep, "sample.json")):
         Label(master, text ="Do you want to calibrate or use a previous calibration profile?", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
-        Button(master, text = "New calibration", command = Cal, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
+        Button(master, text = "New calibration", command = calibration, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
         Button(master, text = "Use a user calibration profile", command = NoCal, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 50)
     else:
         Label(master, text ="You didn't calibrate yet... Create a new calibration", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
-        Button(master, text = "New calibration", command = Cal, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
+        Button(master, text = "New calibration", command = calibration, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
 
-def Cal():
+# 3) Calibration process
+def calibration():
     global master
     global val
     eraseWidget()
@@ -79,6 +83,7 @@ def Cal():
         label1 = Label(image=test, bg = 'medium aquamarine')
         label1.image = test
         label1.pack(side = TOP, pady = 25)
+
     if val == 1:
         Label(master, text ="Close your hand so that every joint form a 45° angle", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
         image1 = Image.open(os.path.join(path + os.sep, "45 profile.jpg"))
@@ -93,6 +98,7 @@ def Cal():
         label2.image = test2
         label1.place(x=400,y = master.winfo_height()/2,anchor = CENTER)
         label2.place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
+
     if val == 2:
         Label(master, text ="Close your hand so that every joint form a 90° angle", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
         image1 = Image.open(os.path.join(path + os.sep, "90 profile.jpg"))
@@ -107,14 +113,18 @@ def Cal():
         label2.image = test2
         label1.place(x=400,y = master.winfo_height()/2,anchor = CENTER)
         label2.place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
+
+    # We ask for a name
     if val == 3:
-        Label(master, text="Enter your Username", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        Label(master, text="Enter your calibration name", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
         entry1 = Entry(master, font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine')
         entry1.pack()
         Button(master, text = "Submit!", command = lambda : getName(entry1.get()), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack()
-    if val<3:
-        but = Button(master, text = "Done!", command = lambda : get_calibration(val), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=725, y=700)
 
+    if val<3:
+        Button(master, text = "Done!", command = lambda : get_calibration(val), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=725, y=700)
+
+# 3.1) Function that collects the data necessary to estimate the angle from the potentiometer values
 def get_calibration(num):
     global angles_raw, val, coeff_MCP,coeff_PIP
     eraseWidget()
@@ -131,27 +141,31 @@ def get_calibration(num):
             coeff_PIP[t] = np.polyfit(x_PIP[t],angle_calibration,2).tolist()
         print(coeff_MCP)
         coeff_MCP[0] = np.polyfit(x_MCP[0],angle_calibration_thumb,2).tolist()
+    calibration() # it always go back to the calibration function
 
-    Cal()
-
+#3.2) ONce the calibration is finished, the program needs to save the data in a JSON file
 def getName(name):
-    if os.path.isfile(os.path.join(path + os.sep, "sample.json")):
-        with open(os.path.join(path + os.sep, "sample.json")) as json_open:
+
+    if os.path.isfile(os.path.join(path + os.sep, "sample.json")): # it verifies if a file already exists 
+        with open(os.path.join(path + os.sep, "sample.json")) as json_open: # if there exists one, it opens it
             data = json.load(json_open)
             
         data['Usernames'].append({'name': name,'PIP': coeff_PIP,'MPCx': coeff_MCP,'MPCz': z_MCP})
 
         with open(os.path.join(path + os.sep, "sample.json"),"w") as json_write:
             json.dump(data,json_write)
-    else:
+
+    else: # otherwise we create a file in the directory of the program
         data = {}
         data['Usernames'] = []
         data['Usernames'].append({'name': name,'PIP': coeff_PIP,'MPCx': coeff_MCP,'MPCz': z_MCP})
 
         with open(os.path.join(path + os.sep, "sample.json"), "w") as json_create:
             json.dump(data, json_create)
-    final_page()
 
+    final_page() # Finally, the code arrives to the final page
+
+# 4) It is called if the user choose to use a previous calibration
 def NoCal():
     eraseWidget()
     Label(master, text ="Choose your calibration profile", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 100)
@@ -160,7 +174,7 @@ def NoCal():
     for user in data['Usernames'] : 
         Button(master, text = user['name'], command = lambda username = user: get_coeff(username['PIP'],username['MPCx'],username['MPCz']), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
 
-# function that replace the coefficient from the JSON
+# Function that replace the coefficient from the JSON
 def get_coeff(PIP, MPCx, MPCz):
     global coeff_MCP, coeff_PIP, z_MCP
     coeff_PIP = PIP
@@ -168,18 +182,23 @@ def get_coeff(PIP, MPCx, MPCz):
     z_MCP = MPCz
     final_page()
 
+# 5) The final page just display a message
 def final_page():
-    global Unity,sock
-    Unity = True
-    host, port = "127.0.0.1", 25001
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((host, port))
+    Unity() #comment this line if you don't want a connection to Unity
     eraseWidget()
     Label(master, text ="You are ready to use the glove", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
     Label(master, text ="The angles are avaibles in the array 'angles'", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 10)
     Label(master, text ="Or try in UNITY", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
 
-#---------------function/thread to read the data from the serial port----------------#
+# If called, it connects to the socket of Unity
+def Unity():
+    global Unity,sock
+    Unity = True
+    host, port = "127.0.0.1", 25001
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host, port))
+
+#----A class that allows a function/thread to be closed if it's an infinity loop---#
 class thread_with_trace(Thread):
   def __init__(self, *args, **keywords):
     Thread.__init__(self, *args, **keywords)
@@ -209,13 +228,15 @@ class thread_with_trace(Thread):
   
   def kill(self):
     self.killed = True
-  
-def func():
+
+#---------------function that treats, arranges and send the data----------------#
+def read_function():
   while True:
     global ready,angles_raw,angles,Unity,sock
     if ready == True:
         data = arduino.readline()[:-2]
         if data:
+
             angles_raw = [float(x) for x in data.split()] 
             
             for i in range (0,5):
@@ -238,9 +259,11 @@ def func():
                 
             for i in range (0,24):
                 angles[i] = int(angles[i]*1000)
+
             if Unity:
                 sock.sendall(json.dumps(angles).encode())
 
+#----------general functions--------# 
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         thread.kill()
@@ -250,9 +273,16 @@ def eraseWidget():
     for widgets in master.winfo_children():
         widgets.destroy()
 
+def poly_reg(coeff,val):
+    return coeff[0] * pow(val,2) + coeff[1]*val + coeff[2]
+
+def potToAngle(val):
+    return val * 330 / 1023 + 345
+
+# Main where the Threads are started
 if __name__ == "__main__":
     thread2 = Thread(target = interface)
-    thread = thread_with_trace(target = func)
+    thread = thread_with_trace(target = read_function)
     path = os.path.dirname(os.path.abspath(__file__))
     thread2.start()
     thread.start()
