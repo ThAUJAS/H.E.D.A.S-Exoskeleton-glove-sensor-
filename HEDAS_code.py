@@ -1,6 +1,7 @@
 from tkinter import * 
 from tkinter import messagebox
 from numpy.lib.function_base import angle
+import socket
 import serial
 import serial.tools.list_ports
 from threading import Thread
@@ -8,9 +9,7 @@ from time import sleep
 import numpy as np
 import trace
 from PIL import ImageTk, Image
-import socket
 import json
-from general_functions import *
 import sys
 import pathlib
 import os
