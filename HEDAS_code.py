@@ -14,7 +14,7 @@ import json
 import sys
 import os
 import cv2
-
+import math
 # creates a Tk() object
 master = Tk()
 
@@ -26,12 +26,13 @@ angles = [0]*23
 unity = False
 done = True
 val = 0
-sock =0
+sock = 0
+s = 0 
 button_web = 0
 # Variables for calibration
-angle_calibration = [0,45,90]
-angle_calibration_thumb = [0,45,80]
-angle_calibration_wrist = [-45,0,45]
+angle_calibration_MCP = [0,45,80]
+angle_calibration_PIP = [0,45,90]
+angle_calibration_wrist = [-30,0,30]
 x_MCP = [[0] * 3 for i1 in range(5)]
 x_PIP = [[0] * 3 for i1 in range(5)]
 z_MCP = [0]*7
@@ -41,12 +42,6 @@ coeff_PIP = [[0] * 3 for i1 in range(5)]
 coeff_wrist = [0] * 3
 
 #webcam variables
-start_point_45 = [(400,400),(400,300),(365,265)]
-end_point_45 = [(400,300),(365,265),(315,265)]
-
-start_point_90 = [(400,400),(400,300),(350,300)]
-end_point_90 = [(400,300),(350,300),(350,350)]
-
 color_prox = (255, 255, 0)
 color_meta = (0, 255, 0)
 color_hand = (0, 0, 255)
@@ -93,80 +88,101 @@ def calibration():
 
     if val == 0:
         Label(master, text ="Put your hand flat with the thumb as far as possible from the fingers", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "0 above.jpg"))
-        image1 = image1.resize((800, 600), Image.ANTIALIAS)
-        test = ImageTk.PhotoImage(image1)
-        label1 = Label(image=test, bg = 'medium aquamarine')
-        label1.image = test
-        label1.pack(side = TOP, pady = 25)
-
+        Label(master, text ="And your hand must be aligned with your arm", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        image1 = Image.open(os.path.join(path + os.sep, "open_profile.png"))
+        image2 = Image.open(os.path.join(path + os.sep, "open_face.png"))
+        test1 = ImageTk.PhotoImage(image1)
+        label1 = Label(image=test1, bg = 'medium aquamarine')
+        label1.image = test1
+        test2 = ImageTk.PhotoImage(image2)
+        label2 = Label(image=test2, bg = 'medium aquamarine')
+        label2.image = test2
+        label1.place(x=225,y = master.winfo_height()/2,anchor = CENTER)
+        label2.place(x=650,y = master.winfo_height()/2,anchor = CENTER)
+        if not show_cam:
+            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1200,y = master.winfo_height()/2,anchor = CENTER)
+            Label(master, text ="This will return the video of your webcam (if you have a one).", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+55,anchor = CENTER)
+            Label(master, text ="The same indicator as in the picture will show on the video", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+95,anchor = CENTER)
+            Label(master, text ="to help you positioning your fingers.", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+135,anchor = CENTER)
+            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+175,anchor = CENTER)
+   
     if val == 1:
-        Label(master, text ="Close your hand so that all your figner and thumb joints are forming a 45° angle", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "45 profile.jpg"))
-        image1 = image1.resize((720, 540), Image.ANTIALIAS)
+        Label(master, text ="Fold your fingers in the same position as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        image1 = Image.open(os.path.join(path + os.sep, "45_finger.png"))
+        image2 = Image.open(os.path.join(path + os.sep, "45_thumb.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
-        label1.place(x=400,y = master.winfo_height()/2,anchor = CENTER)
-        Label(master, text ="Wait...", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
+        test2 = ImageTk.PhotoImage(image2)
+        label2 = Label(image=test2, bg = 'medium aquamarine')
+        label2.image = test2
+        label1.place(x=225,y = master.winfo_height()/2,anchor = CENTER)
+        label2.place(x=650,y = master.winfo_height()/2,anchor = CENTER)
         if not show_cam:
-            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
-            Label(master, text ="This will return the video of your webcam (if you have a one) ", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+50,anchor = CENTER)
-            Label(master, text ="An indicator will show on the video to help you positioning your fingers", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+70,anchor = CENTER)
-            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+90,anchor = CENTER)
-        
-
+            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1200,y = master.winfo_height()/2,anchor = CENTER)
+            Label(master, text ="This will return the video of your webcam (if you have a one).", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+55,anchor = CENTER)
+            Label(master, text ="The same indicator as in the picture will show on the video", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+95,anchor = CENTER)
+            Label(master, text ="to help you positioning your fingers.", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+135,anchor = CENTER)
+            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+175,anchor = CENTER)
+    
     if val == 2:
-        Label(master, text ="Close your hand so that all your figner and thumb joints are forming a 90° angle", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "90 profile.jpg"))
-        image1 = image1.resize((720, 540), Image.ANTIALIAS)
+        Label(master, text = "Fold your fingers in the same position as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        image1 = Image.open(os.path.join(path + os.sep, "90_finger.png"))
+        image2 = Image.open(os.path.join(path + os.sep, "90_thumb.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
-        label1.place(x=400,y = master.winfo_height()/2,anchor = CENTER)
-        Label(master, text ="Wait...", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
+        test2 = ImageTk.PhotoImage(image2)
+        label2 = Label(image=test2, bg = 'medium aquamarine')
+        label2.image = test2
+        label1.place(x=225,y = master.winfo_height()/2,anchor = CENTER)
+        label2.place(x=650,y = master.winfo_height()/2,anchor = CENTER)
         if not show_cam:
-            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
-            Label(master, text ="This will return the video of your webcam (if you have a one) ", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+50,anchor = CENTER)
-            Label(master, text ="An indicator will show on the video to help you positioning your fingers", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+70,anchor = CENTER)
-            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+90,anchor = CENTER)
+            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1200,y = master.winfo_height()/2,anchor = CENTER)
+            Label(master, text ="This will return the video of your webcam (if you have a one).", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+55,anchor = CENTER)
+            Label(master, text ="The same indicator as in the picture will show on the video", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+95,anchor = CENTER)
+            Label(master, text ="to help you positioning your fingers.", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+135,anchor = CENTER)
+            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+175,anchor = CENTER)
+   
     if val == 3:
-        Label(master, text ="Fold your wrist until your hand forms a -45° angle with your arm", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "90 profile.jpg"))
-        image1 = image1.resize((720, 540), Image.ANTIALIAS)
+        Label(master, text ="Fold your wrist until your hand forms a -30° angle", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        Label(master, text ="with your arm as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        image1 = Image.open(os.path.join(path + os.sep, "_30_wrist.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
         label1.place(x=400,y = master.winfo_height()/2,anchor = CENTER)
-        Label(master, text ="Wait...", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
         if not show_cam:
-            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
-            Label(master, text ="This will return the video of your webcam (if you have a one) ", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+50,anchor = CENTER)
-            Label(master, text ="An indicator will show on the video to help you positioning your fingers", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+70,anchor = CENTER)
-            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+90,anchor = CENTER)
+            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1200,y = master.winfo_height()/2,anchor = CENTER)
+            Label(master, text ="This will return the video of your webcam (if you have a one).", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+55,anchor = CENTER)
+            Label(master, text ="The same indicator as in the picture will show on the video", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+95,anchor = CENTER)
+            Label(master, text ="to help you positioning your fingers.", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+135,anchor = CENTER)
+            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+175,anchor = CENTER)
+   
     if val == 4:
-        Label(master, text ="Fold your wrist the other way until your hand forms a 45° angle with your arm", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "90 profile.jpg"))
-        image1 = image1.resize((720, 540), Image.ANTIALIAS)
+        Label(master, text ="Fold your wrist the other way until your hand", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        Label(master, text ="forms a 30° angle with your arm as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        image1 = Image.open(os.path.join(path + os.sep, "30_wrist.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
         label1.place(x=400,y = master.winfo_height()/2,anchor = CENTER)
-        Label(master, text ="Wait...", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
         if not show_cam:
-            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
-            Label(master, text ="This will return the video of your webcam (if you have a one) ", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+50,anchor = CENTER)
-            Label(master, text ="An indicator will show on the video to help you positioning your fingers", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+70,anchor = CENTER)
-            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 10), bg = 'medium aquamarine').place(x=1150,y = master.winfo_height()/2+90,anchor = CENTER)
+            Button(master, text = "Show the webcam", command = lambda : show(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=1200,y = master.winfo_height()/2,anchor = CENTER)
+            Label(master, text ="This will return the video of your webcam (if you have a one).", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+55,anchor = CENTER)
+            Label(master, text ="The same indicator as in the picture will show on the video", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200,y = master.winfo_height()/2+95,anchor = CENTER)
+            Label(master, text ="to help you positioning your fingers.", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+135,anchor = CENTER)
+            Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+175,anchor = CENTER)
+   
     # We ask for a name
     if val == 5:
         if show_cam:
             cap.release()
             thread1.kill()
-        Label(master, text="Enter your calibration name", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        Label(master, text="Enter your calibration name", font=("Abadi MT Condensed Extra Bold", 40), bg = 'medium aquamarine').pack(pady = 300)
         entry1 = Entry(master, font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine')
-        entry1.pack()
-        Button(master, text = "Submit!", command = lambda : getName(entry1.get()), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack()
+        entry1.place(x= master.winfo_width()/2, y = master.winfo_height()/2,anchor = CENTER)
+        Button(master, text = "Submit!", command = lambda : getName(entry1.get()), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x= master.winfo_width()/2, y = master.winfo_height()/2+100,anchor = CENTER)
         
     if val<5:
         Button(master, text = "Done!", command = lambda : get_calibration(), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').place(x=725, y=700)
@@ -193,12 +209,12 @@ def get_calibration():
     val = val + 1
     if val == 5:
         for t in range(0,5):
-            coeff_MCP[t] = np.polyfit(x_MCP[t],angle_calibration,2).tolist()
-            coeff_PIP[t] = np.polyfit(x_PIP[t],angle_calibration,2).tolist()
-        coeff_MCP[0] = np.polyfit(x_MCP[0],angle_calibration_thumb,2).tolist()
+            coeff_MCP[t] = np.polyfit(x_MCP[t],angle_calibration_MCP,2).tolist()
+            coeff_PIP[t] = np.polyfit(x_PIP[t],angle_calibration_PIP,2).tolist()
         coeff_wrist = np.polyfit(wrist_val,angle_calibration_wrist,2).tolist()
     calibration() # it always goes back to the calibration function
 
+# shows the webcam
 def show():
     global show_cam,cap
     show_cam = True
@@ -251,7 +267,7 @@ def get_coeff(PIP, MPCx, MPCz,wrist):
 # 5) The final page just display a message
 def final_page():
     #comment this line if you don't want a connection to Unity
-    Unity()
+    #Unity()
     eraseWidget()
     Label(master, text ="You are ready to use the glove", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
     Label(master, text ="The angles are avaibles in the array 'angles'", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 10)
@@ -259,11 +275,16 @@ def final_page():
 
 # If called, it connects to the socket of Unity
 def Unity():
-    global unity,sock
-    unity = True
-    host, port = "127.0.0.1", 25001
+    global unity,sock,s
+    #Unity connection
+    host, port = "127.0.0.1", 25001# IP adress (should be same as client) and port number
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, port))
+    # test part
+    '''HOST,PORT = '192.168.43.49',65436  
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((HOST, PORT))
+    unity = True'''
 
 #----A class that allows a function/thread to be closed if it's an infinity loop---#
 class thread_with_trace(Thread):
@@ -298,7 +319,7 @@ class thread_with_trace(Thread):
 
 #---------------function that treats, arranges and send the data----------------#
 def read_function():
-    global ready,angles_raw,angles,unity,sock
+    global ready,angles_raw,angles,unity,sock,s
     while True:
         if ready == True:
             data = arduino.readline()[:-2]
@@ -323,44 +344,67 @@ def read_function():
                 for i in range (0,4): 
                     # DIP
                     angles[i+19] = angles[i+1]*0.88
-
-                print("MPCx angle: ",angles[6])
                 
                 if unity:
+                    #s.sendall(str(angles[7]).encode('utf-8'))
                     for i in range (0,23):
                         angles[i] = int(angles[i]*1000)
                     sock.sendall(json.dumps(angles).encode())
                 
-
 def show_image():
-    global show_cam,val,start_point_45,end_point_45,start_point_90,end_point_90
+    global show_cam,val,cap
     while True:
         if show_cam:
             _, frame = cap.read()
             frame = cv2.flip(frame, 1)
             cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
             overlay = cv2image.copy()
+            if val == 0:
+                cv2.line(overlay, (400,450), (400,300), color_hand, 30)
+                cv2.line(overlay, (400,300), (400,200), color_meta, 30)
             if val == 1:
-                cv2.line(overlay, start_point_45[0], end_point_45[0], color_hand, thickness)
-                cv2.line(overlay, start_point_45[1], end_point_45[1], color_meta, thickness)
-                cv2.line(overlay, start_point_45[2], end_point_45[2], color_prox, thickness)
+                angles1 = math.pi/4
+                angles2 = math.pi/4
+                cv2.line(overlay, (400,400), (400,300), color_hand, thickness)
+                cv2.line(overlay, (400,300), (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), color_meta, thickness)
+                cv2.line(overlay, (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), (int(400+50*math.cos(angles1)+50*math.sin(angles2+angles1)),int(300-50*math.sin(angles1)-50*math.cos(angles2+angles1))), color_prox, thickness)
+                angles1 = math.pi/4*3
+                angles2 = math.pi/4*3
+                cv2.line(overlay, (400,300), (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), color_meta, thickness)
+                cv2.line(overlay, (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), (int(400+50*math.cos(angles1)+50*math.sin(angles2+angles1)),int(300-50*math.sin(angles1)-50*math.cos(angles2+angles1))), color_prox, thickness)
             if val == 2:
-                cv2.line(overlay, start_point_90[0], end_point_90[0], color_hand, thickness)
-                cv2.line(overlay, start_point_90[1], end_point_90[1], color_meta, thickness)
-                cv2.line(overlay, start_point_90[2], end_point_90[2], color_prox, thickness)
+                angles1 = math.radians(10)
+                angles2 = math.radians(-90)
+                cv2.line(overlay, (400,400), (400,300), color_hand, thickness)
+                cv2.line(overlay, (400,300), (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), color_meta, thickness)
+                cv2.line(overlay, (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), (int(400+50*math.cos(angles1)+50*math.cos(angles2+angles1)),int(300-50*math.sin(angles1)-50*math.sin(angles2+angles1))), color_prox, thickness)
+                angles1 = math.radians(170)
+                angles2 = math.radians(90)
+                cv2.line(overlay, (400,400), (400,300), color_hand, thickness)
+                cv2.line(overlay, (400,300), (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), color_meta, thickness)
+                cv2.line(overlay, (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), (int(400+50*math.cos(angles1)+50*math.cos(angles2+angles1)),int(300-50*math.sin(angles1)-50*math.sin(angles2+angles1))), color_prox, thickness)
+            if val == 3:
+                angles1 = math.radians(70)
+                cv2.line(overlay, (400,450), (400,300), color_hand, 30)
+                cv2.line(overlay, (400,300), (int(400+100*math.cos(angles1)),int(300-100*math.sin(angles1))), color_meta, 30)
+            if val == 4:
+                angles1 = math.radians(120)
+                cv2.line(overlay, (400,450), (400,300), color_hand, 30)
+                cv2.line(overlay, (400,300), (int(400+100*math.cos(angles1)),int(300-100*math.sin(angles1))), color_meta, 30)
             cv2.addWeighted(overlay, alpha, cv2image, 1 - alpha,0, cv2image)
+
             img = PIL.Image.fromarray(cv2image)
             imgtk = ImageTk.PhotoImage(image=img)
             label2 = Label(image=imgtk, bg = 'medium aquamarine')
             label2.image = imgtk
-            label2.place(x=1150,y = master.winfo_height()/2,anchor = CENTER)
+            label2.place(x=1200,y = master.winfo_height()/2,anchor = CENTER)
 
 #----------general functions--------# 
 def on_closing():
     global cap,show_cam
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         if show_cam:
-            cap.release()
+            cv2.destroyAllWindows()
             thread1.kill()
         thread.kill()
         master.quit()
