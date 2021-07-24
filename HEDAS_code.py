@@ -32,7 +32,7 @@ button_web = 0
 # Variables for calibration
 angle_calibration_MCP = [0,45,80]
 angle_calibration_PIP = [0,45,90]
-angle_calibration_wrist = [-30,0,30]
+angle_calibration_wrist = [-45,0,45]
 x_MCP = [[0] * 3 for i1 in range(5)]
 x_PIP = [[0] * 3 for i1 in range(5)]
 z_MCP = [0]*7
@@ -73,7 +73,7 @@ def Calibration(portDevice):
     arduino = serial.Serial(port=portDevice, baudrate=115200, timeout=.1) # the arduino is connected to Python
     ready = True # the read_function can start reading the Arduino data
     eraseWidget()
-    if os.path.isfile(os.path.join(path + os.sep, "sample.json")):
+    if os.path.isfile(os.path.join(path + os.sep, "calibration.json")):
         Label(master, text ="Do you want to calibrate or use a previous calibration profile?", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
         Button(master, text = "New calibration", command = calibration, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
         Button(master, text = "Use a user calibration profile", command = NoCal, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 50)
@@ -145,9 +145,9 @@ def calibration():
             Label(master, text ="Opening the webcam can take a couple of seconds", font=("Abadi MT Condensed Extra Bold", 15), bg = 'medium aquamarine').place(x=1200+25,y = master.winfo_height()/2+175,anchor = CENTER)
    
     if val == 3:
-        Label(master, text ="Fold your wrist until your hand forms a -30° angle", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        Label(master, text ="Fold your wrist until your hand forms a -45° angle", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
         Label(master, text ="with your arm as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "_30_wrist.png"))
+        image1 = Image.open(os.path.join(path + os.sep, "_45_wrist.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
@@ -161,8 +161,8 @@ def calibration():
    
     if val == 4:
         Label(master, text ="Fold your wrist the other way until your hand", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        Label(master, text ="forms a 30° angle with your arm as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "30_wrist.png"))
+        Label(master, text ="forms a 45° angle with your arm as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
+        image1 = Image.open(os.path.join(path + os.sep, "45_wrist.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
@@ -227,13 +227,13 @@ def show():
 #3.2) ONce the calibration is finished, the program needs to save the data in a JSON file
 def getName(name):
     global coeff_MCP, coeff_PIP, z_MCP, coeff_wrist
-    if os.path.isfile(os.path.join(path + os.sep, "sample.json")): # it verifies if a file already exists 
-        with open(os.path.join(path + os.sep, "sample.json")) as json_open: # if there exists one, it opens it
+    if os.path.isfile(os.path.join(path + os.sep, "calibration.json")): # it verifies if a file already exists 
+        with open(os.path.join(path + os.sep, "calibration.json")) as json_open: # if there exists one, it opens it
             data = json.load(json_open)
             
         data['Usernames'].append({'name': name,'PIP': coeff_PIP,'MPCx': coeff_MCP,'MPCz': z_MCP,'wrist': coeff_wrist})
 
-        with open(os.path.join(path + os.sep, "sample.json"),"w") as json_write:
+        with open(os.path.join(path + os.sep, "calibration.json"),"w") as json_write:
             json.dump(data,json_write)
 
     else: # otherwise we create a file in the directory of the program
@@ -241,7 +241,7 @@ def getName(name):
         data['Usernames'] = []
         data['Usernames'].append({'name': name,'PIP': coeff_PIP,'MPCx': coeff_MCP,'MPCz': z_MCP,'wrist': coeff_wrist})
 
-        with open(os.path.join(path + os.sep, "sample.json"), "w") as json_create:
+        with open(os.path.join(path + os.sep, "calibration.json"), "w") as json_create:
             json.dump(data, json_create)
 
     final_page() # Finally, the code arrives to the final page
@@ -250,7 +250,7 @@ def getName(name):
 def NoCal():
     eraseWidget()
     Label(master, text ="Choose your calibration profile", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 100)
-    with open(os.path.join(path + os.sep, "sample.json")) as json_open:
+    with open(os.path.join(path + os.sep, "calibration.json")) as json_open:
         data = json.load(json_open)
     for user in data['Usernames'] : 
         Button(master, text = user['name'], command = lambda username = user: get_coeff(username['PIP'],username['MPCx'],username['MPCz'],username['wrist']), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
@@ -267,7 +267,7 @@ def get_coeff(PIP, MPCx, MPCz,wrist):
 # 5) The final page just display a message
 def final_page():
     #comment this line if you don't want a connection to Unity
-    #Unity()
+    Unity()
     eraseWidget()
     Label(master, text ="You are ready to use the glove", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
     Label(master, text ="The angles are avaibles in the array 'angles'", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 10)
@@ -277,6 +277,7 @@ def final_page():
 def Unity():
     global unity,sock,s
     #Unity connection
+    unity = True
     host, port = "127.0.0.1", 25001# IP adress (should be same as client) and port number
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, port))
@@ -284,7 +285,7 @@ def Unity():
     '''HOST,PORT = '192.168.43.49',65436  
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
-    unity = True'''
+    '''
 
 #----A class that allows a function/thread to be closed if it's an infinity loop---#
 class thread_with_trace(Thread):
@@ -384,11 +385,11 @@ def show_image():
                 cv2.line(overlay, (400,300), (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), color_meta, thickness)
                 cv2.line(overlay, (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), (int(400+50*math.cos(angles1)+50*math.cos(angles2+angles1)),int(300-50*math.sin(angles1)-50*math.sin(angles2+angles1))), color_prox, thickness)
             if val == 3:
-                angles1 = math.radians(70)
+                angles1 = math.radians(45)
                 cv2.line(overlay, (400,450), (400,300), color_hand, 30)
                 cv2.line(overlay, (400,300), (int(400+100*math.cos(angles1)),int(300-100*math.sin(angles1))), color_meta, 30)
             if val == 4:
-                angles1 = math.radians(120)
+                angles1 = math.radians(135)
                 cv2.line(overlay, (400,450), (400,300), color_hand, 30)
                 cv2.line(overlay, (400,300), (int(400+100*math.cos(angles1)),int(300-100*math.sin(angles1))), color_meta, 30)
             cv2.addWeighted(overlay, alpha, cv2image, 1 - alpha,0, cv2image)
@@ -417,13 +418,13 @@ def poly_reg(coeff,val):
     return coeff[0] * pow(val,2) + coeff[1]*val + coeff[2]
 
 def potToAngle(val):
-    return val * 330 / 1023 + 30
+    return val * 330 / (1023 + 15)
 
 # Main where the Threads are started
 if __name__ == "__main__":
     thread1 = thread_with_trace(target = show_image)
     thread = thread_with_trace(target = read_function)
-    thread2 = Thread(target = interface)
+    thread2 = Thread(target = calibration)
     path = os.path.dirname(os.path.abspath(__file__))
     thread2.start()
     thread.start()
