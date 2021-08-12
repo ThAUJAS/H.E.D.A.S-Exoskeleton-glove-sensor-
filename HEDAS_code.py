@@ -7,7 +7,7 @@ import socket
 import serial
 import serial.tools.list_ports
 from threading import Thread
-from time import sleep
+from time import sleep, time
 import numpy as np
 import trace
 import json
@@ -63,7 +63,7 @@ def interface():
     if (len(ports) != 0): # we found a port
         label = Label(master, text ="Choose the port to which the device is connected:", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
         for port in ports :  # we display the ports' name on buttons
-            Button(master, text = port.device, command = lambda : Calibration(port.device), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack()
+            Button(master, text = port.device, command = lambda : Calibration(port.device), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 20)
     else:  # else we need to connect the device and relaunch the program
         label = Label(master, text = "No port found. Connect a device and relaunch the program", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 300)
 
@@ -73,7 +73,7 @@ def Calibration(portDevice):
     arduino = serial.Serial(port=portDevice, baudrate=115200, timeout=.1) # the arduino is connected to Python
     ready = True # the read_function can start reading the Arduino data
     eraseWidget()
-    if os.path.isfile(os.path.join(path + os.sep, "calibration.json")):
+    if os.path.isfile(os.path.join(path + os.sep, "sample.json")):
         Label(master, text ="Do you want to calibrate or use a previous calibration profile?", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
         Button(master, text = "New calibration", command = calibration, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
         Button(master, text = "Use a user calibration profile", command = NoCal, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 50)
@@ -227,13 +227,13 @@ def show():
 #3.2) ONce the calibration is finished, the program needs to save the data in a JSON file
 def getName(name):
     global coeff_MCP, coeff_PIP, z_MCP, coeff_wrist
-    if os.path.isfile(os.path.join(path + os.sep, "calibration.json")): # it verifies if a file already exists 
-        with open(os.path.join(path + os.sep, "calibration.json")) as json_open: # if there exists one, it opens it
+    if os.path.isfile(os.path.join(path + os.sep, "sample.json")): # it verifies if a file already exists 
+        with open(os.path.join(path + os.sep, "sample.json")) as json_open: # if there exists one, it opens it
             data = json.load(json_open)
             
         data['Usernames'].append({'name': name,'PIP': coeff_PIP,'MPCx': coeff_MCP,'MPCz': z_MCP,'wrist': coeff_wrist})
 
-        with open(os.path.join(path + os.sep, "calibration.json"),"w") as json_write:
+        with open(os.path.join(path + os.sep, "sample.json"),"w") as json_write:
             json.dump(data,json_write)
 
     else: # otherwise we create a file in the directory of the program
@@ -241,7 +241,7 @@ def getName(name):
         data['Usernames'] = []
         data['Usernames'].append({'name': name,'PIP': coeff_PIP,'MPCx': coeff_MCP,'MPCz': z_MCP,'wrist': coeff_wrist})
 
-        with open(os.path.join(path + os.sep, "calibration.json"), "w") as json_create:
+        with open(os.path.join(path + os.sep, "sample.json"), "w") as json_create:
             json.dump(data, json_create)
 
     final_page() # Finally, the code arrives to the final page
@@ -250,7 +250,7 @@ def getName(name):
 def NoCal():
     eraseWidget()
     Label(master, text ="Choose your calibration profile", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 100)
-    with open(os.path.join(path + os.sep, "calibration.json")) as json_open:
+    with open(os.path.join(path + os.sep, "sample.json")) as json_open:
         data = json.load(json_open)
     for user in data['Usernames'] : 
         Button(master, text = user['name'], command = lambda username = user: get_coeff(username['PIP'],username['MPCx'],username['MPCz'],username['wrist']), font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
@@ -277,7 +277,7 @@ def final_page():
 def Unity():
     global unity,sock,s
     #Unity connection
-    unity = True
+    unity = False
     host, port = "127.0.0.1", 25001# IP adress (should be same as client) and port number
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, port))
@@ -325,7 +325,6 @@ def read_function():
         if ready == True:
             data = arduino.readline()[:-2]
             if data:
-
                 angles_raw = [float(x) for x in data.split()] 
                 
                 for i in range (0,5):
@@ -345,7 +344,7 @@ def read_function():
                 for i in range (0,4): 
                     # DIP
                     angles[i+19] = angles[i+1]*0.88
-                
+                    
                 if unity:
                     #s.sendall(str(angles[7]).encode('utf-8'))
                     for i in range (0,23):
@@ -374,12 +373,12 @@ def show_image():
                 cv2.line(overlay, (400,300), (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), color_meta, thickness)
                 cv2.line(overlay, (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), (int(400+50*math.cos(angles1)+50*math.sin(angles2+angles1)),int(300-50*math.sin(angles1)-50*math.cos(angles2+angles1))), color_prox, thickness)
             if val == 2:
-                angles1 = math.radians(10)
+                angles1 = math.radians(0)
                 angles2 = math.radians(-90)
                 cv2.line(overlay, (400,400), (400,300), color_hand, thickness)
                 cv2.line(overlay, (400,300), (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), color_meta, thickness)
                 cv2.line(overlay, (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), (int(400+50*math.cos(angles1)+50*math.cos(angles2+angles1)),int(300-50*math.sin(angles1)-50*math.sin(angles2+angles1))), color_prox, thickness)
-                angles1 = math.radians(170)
+                angles1 = math.radians(180)
                 angles2 = math.radians(90)
                 cv2.line(overlay, (400,400), (400,300), color_hand, thickness)
                 cv2.line(overlay, (400,300), (int(400+50*math.cos(angles1)),int(300-50*math.sin(angles1))), color_meta, thickness)
@@ -424,7 +423,7 @@ def potToAngle(val):
 if __name__ == "__main__":
     thread1 = thread_with_trace(target = show_image)
     thread = thread_with_trace(target = read_function)
-    thread2 = Thread(target = calibration)
+    thread2 = Thread(target = interface)
     path = os.path.dirname(os.path.abspath(__file__))
     thread2.start()
     thread.start()
