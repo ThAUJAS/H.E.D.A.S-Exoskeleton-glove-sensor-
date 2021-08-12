@@ -1,3 +1,4 @@
+# Libraries
 from tkinter import * 
 from tkinter import messagebox
 import PIL
@@ -15,6 +16,7 @@ import sys
 import os
 import cv2
 import math
+
 # creates a Tk() object
 master = Tk()
 
@@ -29,6 +31,7 @@ val = 0
 sock = 0
 s = 0 
 button_web = 0
+
 # Variables for calibration
 angle_calibration_MCP = [0,45,80]
 angle_calibration_PIP = [0,45,90]
@@ -45,11 +48,11 @@ coeff_wrist = [0] * 3
 color_prox = (255, 255, 0)
 color_meta = (0, 255, 0)
 color_hand = (0, 0, 255)
-
 alpha = 0.4
 thickness = 10
 show_cam = False
 cap = 0
+
 #----------------------------function/thread for the interface--------------------------#
 # 1) Main page: asking for the Port to which the Arduino is connected
 def interface():
@@ -73,6 +76,7 @@ def Calibration(portDevice):
     arduino = serial.Serial(port=portDevice, baudrate=115200, timeout=.1) # the arduino is connected to Python
     ready = True # the read_function can start reading the Arduino data
     eraseWidget()
+    # checking if a file exists
     if os.path.isfile(os.path.join(path + os.sep, "sample.json")):
         Label(master, text ="Do you want to calibrate or use a previous calibration profile?", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
         Button(master, text = "New calibration", command = calibration, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
@@ -81,7 +85,7 @@ def Calibration(portDevice):
         Label(master, text ="You didn't calibrate yet... Create a new calibration", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
         Button(master, text = "New calibration", command = calibration, font=("Abadi MT Condensed Extra Bold", 30), bg = 'snow').pack(pady = 10)
 
-# 3) Calibration process
+# 3) Calibration process with 5 steps
 def calibration():
     global master, val, show_cam,cap,thread1, button_web
     eraseWidget()
@@ -214,7 +218,7 @@ def get_calibration():
         coeff_wrist = np.polyfit(wrist_val,angle_calibration_wrist,2).tolist()
     calibration() # it always goes back to the calibration function
 
-# shows the webcam
+# shows the webcam if activated
 def show():
     global show_cam,cap
     show_cam = True
@@ -264,10 +268,10 @@ def get_coeff(PIP, MPCx, MPCz,wrist):
     coeff_wrist = wrist
     final_page()
 
-# 5) The final page just display a message
+# 5) The final page just display a message (and decides if a connection to Unity occurs)
+# A function can be added here with a thread to be used for anything
 def final_page():
-    #comment this line if you don't want a connection to Unity
-    Unity()
+    Unity() #comment this line if you don't want a connection to Unity
     eraseWidget()
     Label(master, text ="You are ready to use the glove", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 150)
     Label(master, text ="The angles are avaibles in the array 'angles'", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack(pady = 10)
@@ -277,7 +281,7 @@ def final_page():
 def Unity():
     global unity,sock,s
     #Unity connection
-    unity = False
+    unity = False 
     host, port = "127.0.0.1", 25001# IP adress (should be same as client) and port number
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, port))
@@ -400,6 +404,7 @@ def show_image():
             label2.place(x=1200,y = master.winfo_height()/2,anchor = CENTER)
 
 #----------general functions--------# 
+# when the close button is pressed on the window
 def on_closing():
     global cap,show_cam
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
@@ -409,23 +414,28 @@ def on_closing():
         thread.kill()
         master.quit()
 
+# function that erase every widget on the screen
 def eraseWidget():
     for widgets in master.winfo_children():
         widgets.destroy()
 
+# takes the coeff for argument, return the values to a second degree function
 def poly_reg(coeff,val):
     return coeff[0] * pow(val,2) + coeff[1]*val + coeff[2]
 
+# function that maps the potentiometer value to an angle (the pot goes from 15° to 345°)
 def potToAngle(val):
     return val * 330 / (1023 + 15)
 
 # Main where the Threads are started
 if __name__ == "__main__":
-    thread1 = thread_with_trace(target = show_image)
-    thread = thread_with_trace(target = read_function)
-    thread2 = Thread(target = interface)
-    path = os.path.dirname(os.path.abspath(__file__))
+    thread = thread_with_trace(target = read_function) # "       " read the values, process it and send it with Socket
+    thread1 = thread_with_trace(target = show_image) # define the thread/function that shows the webcam
+    thread2 = Thread(target = interface) # "       " shows the interface with Tkinter
+
+    #starts the threads 0 and 1
     thread2.start()
     thread.start()
+    path = os.path.dirname(os.path.abspath(__file__))
     master.protocol("WM_DELETE_WINDOW", on_closing)
     master.mainloop()
