@@ -93,8 +93,8 @@ def calibration():
     if val == 0:
         Label(master, text ="Put your hand flat with the thumb as far as possible from the fingers", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
         Label(master, text ="And your hand must be aligned with your arm", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "open_profile.png"))
-        image2 = Image.open(os.path.join(path + os.sep, "open_face.png"))
+        image1 = Image.open(os.path.join(path + os.sep, "image","open_profile.png"))
+        image2 = Image.open(os.path.join(path + os.sep, "image","open_face.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
@@ -112,8 +112,8 @@ def calibration():
    
     if val == 1:
         Label(master, text ="Fold your fingers in the same position as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "45_finger.png"))
-        image2 = Image.open(os.path.join(path + os.sep, "45_thumb.png"))
+        image1 = Image.open(os.path.join(path + os.sep,"image", "45_finger.png"))
+        image2 = Image.open(os.path.join(path + os.sep,"image", "45_thumb.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
@@ -131,8 +131,8 @@ def calibration():
     
     if val == 2:
         Label(master, text = "Fold your fingers in the same position as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "90_finger.png"))
-        image2 = Image.open(os.path.join(path + os.sep, "90_thumb.png"))
+        image1 = Image.open(os.path.join(path + os.sep,"image", "90_finger.png"))
+        image2 = Image.open(os.path.join(path + os.sep,"image", "90_thumb.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
@@ -151,7 +151,7 @@ def calibration():
     if val == 3:
         Label(master, text ="Fold your wrist until your hand forms a -45° angle", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
         Label(master, text ="with your arm as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "_45_wrist.png"))
+        image1 = Image.open(os.path.join(path + os.sep,"image", "_45_wrist.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
@@ -166,7 +166,7 @@ def calibration():
     if val == 4:
         Label(master, text ="Fold your wrist the other way until your hand", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
         Label(master, text ="forms a 45° angle with your arm as in the picture", font=("Abadi MT Condensed Extra Bold", 30), bg = 'medium aquamarine').pack()
-        image1 = Image.open(os.path.join(path + os.sep, "45_wrist.png"))
+        image1 = Image.open(os.path.join(path + os.sep,"image", "45_wrist.png"))
         test1 = ImageTk.PhotoImage(image1)
         label1 = Label(image=test1, bg = 'medium aquamarine')
         label1.image = test1
