@@ -281,7 +281,7 @@ def final_page():
 def Unity():
     global unity,sock,s
     #Unity connection
-    unity = False 
+    unity = True 
     host, port = "127.0.0.1", 25001# IP adress (should be same as client) and port number
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, port))
