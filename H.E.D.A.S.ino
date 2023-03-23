@@ -1,5 +1,15 @@
 #include<Wire.h>
 #include <curveFitting.h>
+#include "MedianFilterLib.h"
+
+//IMU var
+const int MPU_ADDR = 0x68; 
+int16_t accX, accY, accZ;
+double xAngle, yAngle, zAngle;
+MedianFilter<float> medianFilterRoll(10);
+MedianFilter<float> medianFilterPitch(10);
+MedianFilter<float> medianFilterYaw(10);
+double pitch,roll,yaw;
 
 //Mux variables
 int s0 = 4;
@@ -65,6 +75,23 @@ void loop(){
   }
   angles[15] = analogRead(3);
   angles[16] = analogRead(7);
+  
+  //----IMU reading-------//
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x3B); 
+  Wire.endTransmission(false); 
+  Wire.requestFrom(MPU_ADDR, 6, true);
+  accX = Wire.read()<<8 | Wire.read(); 
+  accY = Wire.read()<<8 | Wire.read(); 
+  accZ = Wire.read()<<8 | Wire.read(); 
+  
+  xAngle = map(accX, 265, 402, -90, 90);
+  yAngle = map(accY, 265, 402, -90, 90);
+  zAngle = map(accZ, 265, 402, -90, 90);
+  
+  angles[17] = medianFilterRoll.AddValue(degrees(atan2(-yAngle, -xAngle) + PI)); //roll
+  angles[18] = medianFilterPitch.AddValue(degrees(atan2(-xAngle, -zAngle) + PI)); // pitch
+  angles[19] = medianFilterYaw.AddValue(degrees(atan2(-yAngle, -xAngle) + PI)); //yaw
   
   //-Printing on the serial monitor for Python to receive the data-//
 
