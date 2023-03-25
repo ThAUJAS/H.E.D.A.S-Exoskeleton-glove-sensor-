@@ -328,7 +328,7 @@ def read_function():
     while True:
         if ready == True:
             data = arduino.readline()[:-2]
-            if data:
+            if data and len(data)==19:
                 angles_raw = [float(x) for x in data.split()] 
                 
                 for i in range (0,5):
