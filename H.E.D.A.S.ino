@@ -1,16 +1,3 @@
-#include<Wire.h>
-#include <curveFitting.h>
-#include "MedianFilterLib.h"
-
-//IMU var
-const int MPU_ADDR = 0x68; 
-int16_t accX, accY, accZ;
-double xAngle, yAngle, zAngle;
-MedianFilter<float> medianFilterRoll(10);
-MedianFilter<float> medianFilterPitch(10);
-MedianFilter<float> medianFilterYaw(10);
-double pitch,roll,yaw;
-
 //Mux variables
 int s0 = 4;
 int s1 = 5;
@@ -18,7 +5,7 @@ int s2 = 6;
 int s3 = 7;
 int SIG_pin = A3;
 
-const int sizeAngle = 20;
+const int sizeAngle = 19;
 double angles[sizeAngle];
 
 int muxChannel[16][4]={
@@ -52,11 +39,6 @@ void setup(){
   
   Serial.begin(115200);
     
-   Wire.begin();
-  Wire.beginTransmission(MPU_ADDR); // Begins a transmission to the I2C slave (GY-521 board)
-  Wire.write(0x6B); // PWR_MGMT_1 register
-  Wire.write(0); // set to zero (wakes up the MPU-6050)
-  Wire.endTransmission(true);
 }
  
 void loop(){
@@ -70,31 +52,20 @@ void loop(){
       // MCP z joints
       angles[i+11] = readMux(channel+2);
   }
-  for (int j = 0; j<3;j++){
-      angles[j*5] = analogRead(j);
-  }
-  angles[15] = analogRead(3);
+  //thumb PIP/MPCx and MPCz
+  angles[12] = analogRead(2);
+  angles[13] = analogRead(4);
+  angles[14] = analogRead(5);
+  
+  //thumb CMC x and y
+  angles[15] = analogRead(6);
   angles[16] = analogRead(7);
   
-  //----IMU reading-------//
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x3B); 
-  Wire.endTransmission(false); 
-  Wire.requestFrom(MPU_ADDR, 6, true);
-  accX = Wire.read()<<8 | Wire.read(); 
-  accY = Wire.read()<<8 | Wire.read(); 
-  accZ = Wire.read()<<8 | Wire.read(); 
-  
-  xAngle = map(accX, 265, 402, -90, 90);
-  yAngle = map(accY, 265, 402, -90, 90);
-  zAngle = map(accZ, 265, 402, -90, 90);
-  
-  angles[17] = medianFilterRoll.AddValue(degrees(atan2(-yAngle, -xAngle) + PI)); //roll
-  angles[18] = medianFilterPitch.AddValue(degrees(atan2(-xAngle, -zAngle) + PI)); // pitch
-  angles[19] = medianFilterYaw.AddValue(degrees(atan2(-yAngle, -xAngle) + PI)); //yaw
+  //wrist
+  angles[17] = analogRead(0);
+  angles[18] = analogRead(1);
   
   //-Printing on the serial monitor for Python to receive the data-//
-
   for(int i = 0; i < sizeAngle-1; i++)
   {
     Serial.print(angles[i]);Serial.print(" ");
