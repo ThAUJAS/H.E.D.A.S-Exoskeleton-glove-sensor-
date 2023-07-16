@@ -16,7 +16,7 @@ int s0 = 4;
 int s1 = 5;
 int s2 = 6;
 int s3 = 7;
-int SIG_pin = 6;
+int SIG_pin = A3;
 
 const int sizeAngle = 20;
 double angles[sizeAngle];
