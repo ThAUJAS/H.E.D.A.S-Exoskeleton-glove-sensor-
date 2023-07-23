@@ -1,8 +1,8 @@
 //Mux variables
-int s0 = 4;
-int s1 = 5;
-int s2 = 6;
-int s3 = 7;
+int s0 = 7;
+int s1 = 6;
+int s2 = 5;
+int s3 = 4;
 int SIG_pin = A3;
 
 const int sizeAngle = 19;
