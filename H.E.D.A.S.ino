@@ -53,9 +53,9 @@ void loop(){
       angles[i+11] = readMux(channel+2);
   }
   //thumb PIP/MPCx and MPCz
-  angles[12] = analogRead(2);
-  angles[13] = analogRead(4);
-  angles[14] = analogRead(5);
+  angles[0] = analogRead(2);
+  angles[5] = analogRead(4);
+  angles[10] = analogRead(5);
   
   //thumb CMC x and y
   angles[15] = analogRead(6);
